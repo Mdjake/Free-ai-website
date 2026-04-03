@@ -1,46 +1,15 @@
 
-<!DOCTYPE html>
 <html>
-<head>
-  <script src="https://js.puter.com/v2/"></script>
-</head>
 <body>
-  <h2>Nano Banana Test - Kolkata Cyber Banana</h2>
-  <div id="result"></div>
-
-  <script>
-    async function generateNanoBanana() {
-      const prompt = "Realistic Kolkata street food vendor holding a glowing nano banana, cyberpunk style, 4K, detailed, vibrant colors, neon lights, Howrah Bridge background";
-      
-      try {
-        console.log("Starting Nano Banana generation...");
-
-        // Correct usage: await returns Image element directly
-        const imageElement = await puter.ai.txt2img(prompt, {
-          model: "gemini-3.1-flash-image-preview",   // most stable right now
-          // model: "gemini-2.5-flash-image",        // fallback if above fails
-          testMode: true,                            // ← important for testing
-          width: 1024,
-          height: 1024,
-          quality: "high"
+    <h1>Nano Banana 2 Image Generation</h1>
+    <script src="https://js.puter.com/v2/"></script>
+    <script>
+        puter.ai.txt2img("A serene Japanese garden with cherry blossoms", {
+            model: "gemini-3.1-flash-image-preview"
+        })
+        .then(imageElement => {
+            document.body.appendChild(imageElement);
         });
-
-        // Append the returned Image element directly
-        document.getElementById("result").innerHTML = '';
-        document.getElementById("result").appendChild(imageElement);
-        
-        console.log("✅ Nano Banana success - Image appended");
-        alert("Image generated successfully!");
-
-      } catch (e) {
-        console.error("Puter Nano Banana error:", e);
-        document.getElementById("result").innerHTML = `<p style="color:red;">Error: ${e.message || e}</p>`;
-        alert("Error: " + (e.message || "Check console for details"));
-      }
-    }
-
-    // Run automatically
-    generateNanoBanana();
-  </script>
+    </script>
 </body>
 </html>
