@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saif Ai Chat • Powered by Puter</title>
+    <script src="https://js.puter.com/v2/"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+        
+        body {
+            margin: 0;
+            font-family: 'Inter', system-ui, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #fff;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        header {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 1rem 2rem;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+        
+        .subtitle {
+            opacity: 0.8;
+            font-size: 0.95rem;
+            margin-top: 4px;
+        }
+        
+        #chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .message {
+            max-width: 80%;
+            padding: 14px 18px;
+            border-radius: 18px;
+            line-height: 1.5;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .user {
+            align-self: flex-end;
+            background: #6b46ff;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .ai {
+            align-self: flex-start;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-bottom-left-radius: 4px;
+        }
+        
+        .typing {
+            align-self: flex-start;
+            background: rgba(255,255,255,0.08);
+            padding: 14px 18px;
+            border-radius: 18px;
+            display: flex;
+            gap: 6px;
+        }
+        
+        .typing span {
+            height: 6px;
+            width: 6px;
+            background: #fff;
+            border-radius: 50%;
+            animation: typingBounce 1.2s infinite;
+        }
+        
+        .typing span:nth-child(2) { animation-delay: 0.2s; }
+        .typing span:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes typingBounce {
+            0%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-8px); }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        #input-area {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 16px 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .input-wrapper {
+            display: flex;
+            gap: 12px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        #user-input {
+            flex: 1;
+            padding: 16px 20px;
+            border: none;
+            border-radius: 9999px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 1.05rem;
+            outline: none;
+        }
+        
+        #user-input::placeholder {
+            color: rgba(255,255,255,0.6);
+        }
+        
+        button {
+            padding: 0 28px;
+            background: #6b46ff;
+            color: white;
+            border: none;
+            border-radius: 9999px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        button:hover {
+            background: #7c5cff;
+            transform: translateY(-2px);
+        }
+        
+        .clear-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.1);
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+        
+        .model-info {
+            text-align: center;
+            font-size: 0.8rem;
+            opacity: 0.7;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🤖 My AI Chat</h1>
+        <p class="subtitle">Talk to powerful AI models instantly • No API keys needed</p>
+    </header>
+
+    <button class="clear-btn" onclick="clearChat()">Clear Chat</button>
+
+    <div id="chat-container">
+        <!-- Messages will appear here -->
+        <div class="message ai">
+            Hello! I'm your personal AI. What would you like to talk about today?
+        </div>
+    </div>
+
+    <div id="input-area">
+        <div class="input-wrapper">
+            <input type="text" id="user-input" placeholder="Type your message here..." 
+                   onkeypress="if(event.key === 'Enter') sendMessage()">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+        <div class="model-info">Powered by Puter.js • Try models like gpt-5.4-nano, claude, gemini, grok, etc.</div>
+    </div>
+
+    <script>
+        let chatHistory = [];
+        
+        // Add a message to the chat UI
+        function addMessage(text, isUser) {
+            const container = document.getElementById('chat-container');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${isUser ? 'user' : 'ai'}`;
+            msgDiv.textContent = text;
+            container.appendChild(msgDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        // Show typing indicator
+        function showTyping() {
+            const container = document.getElementById('chat-container');
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typing-indicator';
+            typingDiv.className = 'typing';
+            typingDiv.innerHTML = `
+                <span></span>
+                <span></span>
+                <span></span>
+            `;
+            container.appendChild(typingDiv);
+            container.scrollTop = container.scrollHeight;
+            return typingDiv;
+        }
+        
+        // Remove typing indicator
+        function removeTyping(typingDiv) {
+            if (typingDiv && typingDiv.parentNode) {
+                typingDiv.parentNode.removeChild(typingDiv);
+            }
+        }
+        
+        // Send message to AI
+        async function sendMessage() {
+            const input = document.getElementById('user-input');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Add user message
+            addMessage(message, true);
+            chatHistory.push({ role: "user", content: message });
+            
+            // Clear input
+            input.value = '';
+            
+            // Show typing
+            const typingDiv = showTyping();
+            
+            try {
+                // Call Puter AI (you can change the model here)
+                const response = await puter.ai.chat(message, {
+                    model: "gpt-5.4-nano",   // Change to "claude-3.5-sonnet", "gemini-2.5-flash", "grok", etc.
+                    // stream: true,         // Uncomment for streaming (more advanced)
+                });
+                
+                removeTyping(typingDiv);
+                addMessage(response, false);
+                chatHistory.push({ role: "assistant", content: response });
+                
+            } catch (error) {
+                removeTyping(typingDiv);
+                addMessage("Sorry, something went wrong. Please try again.", false);
+                console.error(error);
+            }
+        }
+        
+        // Clear the entire chat
+        function clearChat() {
+            if (confirm("Clear the entire conversation?")) {
+                document.getElementById('chat-container').innerHTML = `
+                    <div class="message ai">
+                        Hello! I'm your personal AI. What would you like to talk about today?
+                    </div>
+                `;
+                chatHistory = [];
+            }
+        }
+        
+        // Optional: Auto-focus input
+        window.onload = () => {
+            document.getElementById('user-input').focus();
+        };
+    </script>
+</body>
+</html>
