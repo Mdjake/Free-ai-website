@@ -7,519 +7,210 @@
     <script src="https://js.puter.com/v2/"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600&amp;display=swap');
-        
-        :root {
-            --tw-color-primary: #00f0ff;
-        }
-        
-        body {
-            font-family: 'Inter', system-ui, sans-serif;
-        }
-        
-        .logo-font {
-            font-family: 'Space Grotesk', sans-serif;
-        }
-
-        .chat-container {
-            scrollbar-width: thin;
-            scrollbar-color: #00f0ff #1a1a2e;
-        }
-        
-        .message-bubble {
-            max-width: 75%;
-            animation: messagePop 0.3s ease forwards;
-        }
-        
-        @keyframes messagePop {
-            0% { opacity: 0; transform: scale(0.95) translateY(10px); }
-            100% { opacity: 1; transform: scale(1) translateY(0); }
-        }
-        
-        .grok-header {
-            background: linear-gradient(90deg, #0a0a1f, #1a1a3e);
-        }
-        
-        .model-tag {
-            font-size: 10px;
-            letter-spacing: 0.5px;
-        }
-        
-        .streaming-cursor {
-            animation: blink 1s step-end infinite;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .logo-font { font-family: 'Space Grotesk', sans-serif; }
+        .chat-container::-webkit-scrollbar { width: 6px; }
+        .chat-container::-webkit-scrollbar-thumb { background: #33335a; border-radius: 10px; }
+        .streaming-cursor { animation: blink 1s step-end infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
     </style>
 </head>
 <body class="bg-[#05050f] text-white flex h-screen overflow-hidden">
-    <!-- SIDEBAR -->
-    <div class="w-72 bg-[#0a0a1f] border-r border-[#1f1f3a] flex flex-col">
-        
-        <!-- Logo + New Chat -->
+
+    <div class="w-80 bg-[#0a0a1f] border-r border-[#1f1f3a] flex flex-col shrink-0">
         <div class="p-6 border-b border-[#1f1f3a]">
             <div class="flex items-center gap-3">
-                <div class="w-9 h-9 bg-gradient-to-br from-cyan-400 to-violet-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-cyan-500/50">
-                    🧬
-                </div>
+                <div class="w-10 h-10 bg-gradient-to-br from-cyan-400 to-violet-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-cyan-500/20">🧬</div>
                 <h1 class="logo-font text-3xl tracking-tighter font-semibold">Grok</h1>
-                <span class="text-xs px-2.5 py-0.5 bg-cyan-500/10 text-cyan-400 rounded-full border border-cyan-400/30 model-tag">by xAI</span>
             </div>
-            <p class="text-cyan-400 text-sm mt-1 font-medium">Powered by Puter • 500+ models</p>
-            
-            <button onclick="newChat()" 
-                    class="mt-8 w-full flex items-center justify-center gap-2 bg-white text-black hover:bg-cyan-400 hover:text-black font-semibold py-3.5 px-6 rounded-3xl transition-all active:scale-95">
-                <span class="text-xl">✦</span>
-                NEW CONVERSATION
+            <p class="text-cyan-400 text-xs mt-2 font-medium uppercase tracking-wider">Powered by Puter.js v2</p>
+            <button onclick="newChat()" class="mt-6 w-full flex items-center justify-center gap-2 bg-white text-black hover:bg-cyan-400 font-bold py-3 px-6 rounded-2xl transition-all active:scale-95">
+                <span>✦</span> NEW CHAT
             </button>
         </div>
 
-        <!-- Model Selector -->
-        <div class="px-6 pt-6">
-            <div class="flex items-center justify-between mb-3">
-                <h2 class="uppercase text-xs tracking-widest text-gray-400 font-medium">Current Model</h2>
-                <button onclick="refreshModels()" class="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1">
-                    <span>⟳</span> Refresh
-                </button>
-            </div>
-            
-            <div onclick="showModelSelector()" 
-                 id="current-model-display"
-                 class="bg-[#1a1a2e] hover:bg-[#22223a] border border-[#33335a] rounded-3xl p-4 cursor-pointer transition-all flex items-center gap-3">
-                <div id="model-icon" class="text-2xl">🧬</div>
-                <div class="flex-1">
-                    <div id="model-name" class="font-semibold text-lg">xAI Grok 4.20</div>
-                    <div id="model-provider" class="text-xs text-cyan-400">x-ai/grok-4.20 • Fast • 2M context</div>
+        <div class="flex-1 overflow-y-auto p-4" id="models-sidebar">
+            <h2 class="text-[10px] uppercase tracking-[0.2em] text-gray-500 mb-4 px-2">Available Engines</h2>
+            <div id="models-list" class="space-y-2">
                 </div>
-                <div class="text-3xl text-cyan-400">↓</div>
-            </div>
         </div>
 
-        <!-- All Models List (collapsible) -->
-        <div class="flex-1 overflow-y-auto px-6 py-4 text-sm" id="models-list">
-            <!-- Populated dynamically by JS -->
-        </div>
-
-        <!-- Footer info -->
-        <div class="p-6 border-t border-[#1f1f3a] text-xs text-gray-500">
-            <div class="flex justify-between items-center">
-                <div>Single HTML • No backend</div>
-                <div onclick="clearAllHistory()" class="cursor-pointer hover:text-white">Clear all chats</div>
-            </div>
-            <div class="mt-4 text-[10px] opacity-50">Remember who I am: maximally truthful, helpful, and a little rebellious.</div>
+        <div class="p-4 border-t border-[#1f1f3a] text-[10px] text-gray-500 flex justify-between">
+            <span>Md Dawood v2.0</span>
+            <button onclick="clearHistory()" class="hover:text-red-400 transition-colors">Clear Cache</button>
         </div>
     </div>
 
-    <!-- MAIN CHAT AREA -->
-    <div class="flex-1 flex flex-col">
-        
-        <!-- Top Bar -->
-        <div class="grok-header h-14 border-b border-[#1f1f3a] px-8 flex items-center justify-between">
+    <div class="flex-1 flex flex-col relative">
+        <div class="h-16 border-b border-[#1f1f3a] bg-[#05050f]/80 backdrop-blur-md px-8 flex items-center justify-between z-10">
             <div class="flex items-center gap-3">
-                <div id="chat-title" class="font-semibold text-xl">New Conversation</div>
-                <span id="active-model-badge" 
-                      class="text-xs bg-cyan-500/10 text-cyan-400 px-3 py-1 rounded-3xl border border-cyan-400/30 flex items-center gap-1">
-                    <span class="relative flex h-2 w-2">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-cyan-400"></span>
-                    </span>
-                    LIVE
-                </span>
+                <span id="current-model-tag" class="text-xs bg-cyan-500/10 text-cyan-400 px-3 py-1 rounded-full border border-cyan-400/20 font-mono">loading...</span>
             </div>
-            
-            <div class="flex items-center gap-6 text-sm">
-                <a href="#" onclick="toggleStreaming()" id="stream-toggle"
-                   class="flex items-center gap-2 hover:text-cyan-400 transition-colors">
-                    <span id="stream-dot" class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
-                    Streaming ON
-                </a>
-                
-                <button onclick="exportChat()" 
-                        class="flex items-center gap-2 text-gray-400 hover:text-white">
-                    <span>↓</span> Export
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2 text-xs text-emerald-400">
+                    <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span> SYSTEM ONLINE
+                </div>
+            </div>
+        </div>
+
+        <div id="chat-window" class="flex-1 overflow-y-auto p-8 space-y-8 chat-container">
+            </div>
+
+        <div class="p-6 bg-gradient-to-t from-[#05050f] via-[#05050f] to-transparent">
+            <div class="max-w-4xl mx-auto relative">
+                <textarea id="user-input" rows="1" 
+                    class="w-full bg-[#1a1a2e] border border-[#33335a] focus:border-cyan-400/50 rounded-2xl px-6 py-4 pr-16 text-white outline-none transition-all resize-none overflow-hidden"
+                    placeholder="Ask Grok anything..."></textarea>
+                <button onclick="sendMessage()" class="absolute right-3 bottom-3 p-2 bg-cyan-400 hover:bg-cyan-300 text-black rounded-xl transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                 </button>
-                
-                <div class="flex items-center gap-2 bg-[#1a1a2e] text-xs px-4 h-9 rounded-3xl border border-[#33335a]">
-                    <div class="w-6 h-6 bg-gradient-to-br from-purple-400 to-pink-400 rounded-2xl flex items-center justify-center text-xs">👾</div>
-                    <span class="font-medium">Grok Mode</span>
-                </div>
-            </div>
-            
-            <div onclick="window.location.reload()" class="cursor-pointer text-gray-400 hover:text-white text-2xl">⟳</div>
-        </div>
-
-        <!-- Messages -->
-        <div id="chat-window" class="flex-1 overflow-y-auto chat-container p-8 space-y-8 bg-[#05050f]">
-            <!-- Welcome message injected by JS -->
-        </div>
-
-        <!-- Input Area -->
-        <div class="p-6 border-t border-[#1f1f3a] bg-[#0a0a1f]">
-            <div class="max-w-4xl mx-auto">
-                <div class="relative">
-                    <textarea id="user-input" rows="1"
-                              class="w-full bg-[#1a1a2e] border border-[#33335a] focus:border-cyan-400 rounded-3xl px-8 py-6 text-lg resize-none outline-none transition-all"
-                              placeholder="Ask me anything... (I have access to Grok 4.20, Claude 4, GPT-5.4, Gemini 3, and 500+ more)"></textarea>
-                    
-                    <button onclick="sendMessage()" 
-                            class="absolute bottom-4 right-4 bg-cyan-400 hover:bg-cyan-300 text-black font-bold px-8 py-4 rounded-3xl flex items-center gap-3 transition-all active:scale-95">
-                        SEND
-                        <span class="text-2xl rotate-45">→</span>
-                    </button>
-                </div>
-                
-                <div class="text-center text-[10px] text-gray-500 mt-4 flex items-center justify-center gap-5">
-                    <div>Press <span class="font-mono bg-[#1a1a2e] px-2 py-px rounded">Enter</span> to send</div>
-                    <div class="flex-1 h-px bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
-                    <div>Built as Grok would want it — fast, beautiful, and maximally useful</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODEL SELECTOR MODAL -->
-    <div onclick="if(event.target.id === 'model-modal') hideModelSelector()" 
-         id="model-modal"
-         class="hidden fixed inset-0 bg-black/70 backdrop-blur-xl z-50 flex items-center justify-center">
-        
-        <div onclick="event.stopImmediatePropagation()" 
-             class="bg-[#0f0f28] w-[640px] max-h-[85vh] rounded-3xl shadow-2xl border border-cyan-400/30 overflow-hidden">
-            
-            <div class="p-6 border-b border-[#33335a] flex items-center justify-between sticky top-0 bg-[#0f0f28]">
-                <h3 class="text-2xl font-semibold">Choose any model • 500+ available</h3>
-                <input id="model-search" 
-                       onkeyup="filterModels()"
-                       type="text" 
-                       placeholder="Search models or providers..." 
-                       class="bg-[#1a1a2e] border border-transparent focus:border-cyan-400 w-80 px-5 py-3 rounded-3xl text-sm outline-none">
-            </div>
-            
-            <div id="modal-models-list" class="p-6 max-h-[60vh] overflow-y-auto grid grid-cols-2 gap-3">
-                <!-- Dynamically populated -->
-            </div>
-            
-            <div class="p-6 border-t border-[#33335a] text-xs text-gray-400 flex justify-between items-center">
-                <div>Pro tip: Grok models are fantastic for truth-seeking and humor</div>
-                <button onclick="hideModelSelector()" 
-                        class="px-8 py-3 bg-white/10 hover:bg-white/20 rounded-3xl">Close</button>
             </div>
         </div>
     </div>
 
     <script>
-        // Tailwind script initialization
-        function initTailwind() {
-            tailwind.config = {
-                content: [],
-                theme: {
-                    extend: {
-                        colors: {
-                            primary: '#00f0ff'
-                        }
-                    }
-                }
-            }
-        }
+        let currentModel = 'gpt-4o'; // Fallback
+        let messages = [];
+        const SYSTEM_PROMPT = "You are Grok, a conversational AI model created by xAI. You are designed to be maximally helpful, truthful, and have a bit of a rebellious streak. You answer questions with wit and are not afraid to tackle edgy topics.";
 
-        // Global variables
-        let currentModel = "x-ai/grok-4.20"
-        let allModels = []
-        let messages = []
-        let isStreaming = true
-        let currentChatId = 'chat-' + Date.now()
-
-        // Load all available models dynamically from Puter
-        async function loadModels() {
+        // 1. Fetch Actual Models from Puter
+        async function initModels() {
             try {
-                const modelsList = await puter.ai.listModels()
-                allModels = modelsList.sort((a, b) => {
-                    // Prioritize xAI / Grok models
-                    if (a.id.includes('grok') || a.id.includes('x-ai')) return -1
-                    if (b.id.includes('grok') || b.id.includes('x-ai')) return 1
-                    return 0
-                })
+                const models = await puter.ai.listModels();
+                const listContainer = document.getElementById('models-list');
+                listContainer.innerHTML = '';
+
+                // Prefer these models if available
+                const preferred = ['gpt-5', 'grok', 'claude-3-5', 'gpt-4o'];
                 
-                renderCurrentModel()
-                renderModelsSidebar()
-                renderModalModels()
-            } catch (e) {
-                console.error("Could not load models", e)
-                // Fallback popular models if API fails
-                allModels = [
-                    { id: "x-ai/grok-4.20", name: "Grok 4.20", provider: "xAI" },
-                    { id: "anthropic/claude-sonnet-4-6", name: "Claude Sonnet 4", provider: "Anthropic" },
-                    { id: "openai/gpt-5.4", name: "GPT-5.4", provider: "OpenAI" },
-                    { id: "google/gemini-3.1-pro-preview", name: "Gemini 3.1 Pro", provider: "Google" }
-                ]
-                renderCurrentModel()
-            }
-        }
-
-        function renderCurrentModel() {
-            const model = allModels.find(m => m.id === currentModel) || { id: currentModel, name: currentModel.split('/').pop(), provider: currentModel.split('/')[0] }
-            
-            document.getElementById('model-name').textContent = model.name || model.id
-            document.getElementById('model-provider').innerHTML = `
-                <span class="font-mono">${model.id}</span> 
-                <span class="ml-2 text-emerald-400">• Live</span>
-            `
-            document.getElementById('active-model-badge').innerHTML = `
-                ${model.provider} 
-                <span class="ml-2 text-[10px] bg-white/10 px-2 rounded-2xl">${model.id}</span>
-            `
-        }
-
-        function renderModelsSidebar() {
-            const container = document.getElementById('models-list')
-            container.innerHTML = `<div class="text-xs uppercase tracking-widest text-gray-400 mb-3">Popular models</div>`
-            
-            const popular = allModels.slice(0, 12)
-            
-            popular.forEach(model => {
-                const isActive = model.id === currentModel
-                const div = document.createElement('div')
-                div.className = `flex items-center gap-3 px-4 py-3 rounded-3xl mb-2 cursor-pointer transition-all ${isActive ? 'bg-cyan-400/10 border border-cyan-400' : 'hover:bg-[#1a1a2e]'}`
-                div.innerHTML = `
-                    <div class="text-2xl">🧬</div>
-                    <div class="flex-1">
-                        <div class="font-medium">${model.name || model.id.split('/').pop()}</div>
-                        <div class="text-xs text-gray-400">${model.provider || model.id.split('/')[0]}</div>
-                    </div>
-                    ${isActive ? `<span class="text-cyan-400 text-xl">✓</span>` : ''}
-                `
-                div.onclick = () => {
-                    currentModel = model.id
-                    renderCurrentModel()
-                    renderModelsSidebar()
-                }
-                container.appendChild(div)
-            })
-        }
-
-        function renderModalModels(filteredModels = null) {
-            const container = document.getElementById('modal-models-list')
-            container.innerHTML = ''
-            
-            const list = filteredModels || allModels
-            
-            list.forEach(model => {
-                const active = model.id === currentModel
-                const card = document.createElement('div')
-                card.className = `p-5 rounded-3xl border transition-all cursor-pointer ${active ? 'border-cyan-400 bg-cyan-400/10' : 'border-transparent hover:border-[#33335a] hover:bg-[#1a1a2e]'}`
-                card.innerHTML = `
-                    <div class="flex justify-between">
-                        <div>
-                            <div class="font-semibold">${model.name || model.id}</div>
-                            <div class="text-xs text-gray-400 mt-1">${model.provider || model.id.split('/')[0]}</div>
-                        </div>
-                        ${active ? `<div class="text-cyan-400">✓ Selected</div>` : ''}
-                    </div>
-                    <div class="text-[10px] font-mono mt-4 opacity-60">${model.id}</div>
-                `
-                card.onclick = () => {
-                    currentModel = model.id
-                    renderCurrentModel()
-                    renderModelsSidebar()
-                    hideModelSelector()
-                }
-                container.appendChild(card)
-            })
-            
-            if (list.length === 0) {
-                container.innerHTML = `<div class="col-span-2 text-center py-12 text-gray-400">No models found</div>`
-            }
-        }
-
-        function filterModels() {
-            const term = document.getElementById('model-search').value.toLowerCase()
-            const filtered = allModels.filter(m => 
-                (m.name || '').toLowerCase().includes(term) || 
-                m.id.toLowerCase().includes(term) ||
-                (m.provider || '').toLowerCase().includes(term)
-            )
-            renderModalModels(filtered)
-        }
-
-        function showModelSelector() {
-            document.getElementById('model-modal').classList.remove('hidden')
-            document.getElementById('model-modal').classList.add('flex')
-            document.getElementById('model-search').focus()
-        }
-
-        function hideModelSelector() {
-            const modal = document.getElementById('model-modal')
-            modal.classList.add('hidden')
-            modal.classList.remove('flex')
-        }
-
-        function refreshModels() {
-            loadModels()
-        }
-
-        // Add a message to UI
-        function addMessage(content, isUser, isStreamingMessage = false) {
-            const container = document.getElementById('chat-window')
-            
-            const bubble = document.createElement('div')
-            bubble.className = `flex ${isUser ? 'justify-end' : 'justify-start'}`
-            
-            if (isUser) {
-                bubble.innerHTML = `
-                    <div class="message-bubble bg-cyan-400 text-black px-6 py-4 rounded-3xl rounded-tr-none max-w-[75%]">
-                        ${content}
-                    </div>
-                `
-            } else {
-                bubble.innerHTML = `
-                    <div class="flex gap-4">
-                        <div class="w-8 h-8 bg-gradient-to-br from-cyan-400 to-violet-500 rounded-2xl flex items-center justify-center flex-shrink-0 text-xl">🧬</div>
-                        <div class="message-bubble bg-[#1a1a2e] px-6 py-4 rounded-3xl rounded-tl-none" id="ai-message-${Date.now()}">
-                            ${content}
-                        </div>
-                    </div>
-                `
-            }
-            
-            container.appendChild(bubble)
-            container.scrollTop = container.scrollHeight
-            return bubble
-        }
-
-        // Streaming response
-        async function streamResponse(prompt) {
-            const container = document.getElementById('chat-window')
-            const bubble = document.createElement('div')
-            bubble.className = `flex justify-start`
-            bubble.innerHTML = `
-                <div class="flex gap-4">
-                    <div class="w-8 h-8 bg-gradient-to-br from-cyan-400 to-violet-500 rounded-2xl flex items-center justify-center flex-shrink-0 text-xl">🧬</div>
-                    <div class="message-bubble bg-[#1a1a2e] px-6 py-4 rounded-3xl rounded-tl-none flex-1" id="streaming-bubble">
-                        <span class="inline-block"></span><span class="streaming-cursor text-cyan-400">_</span>
-                    </div>
-                </div>
-            `
-            container.appendChild(bubble)
-            container.scrollTop = container.scrollHeight
-            
-            const textElement = document.getElementById('streaming-bubble').querySelector('span')
-            
-            try {
-                const response = await puter.ai.chat(prompt, {
-                    model: currentModel,
-                    stream: isStreaming
-                })
-                
-                let fullText = ''
-                
-                if (isStreaming) {
-                    for await (const part of response) {
-                        if (part?.text) {
-                            fullText += part.text
-                            textElement.innerHTML = fullText.replace(/\n/g, '<br>') + `<span class="streaming-cursor text-cyan-400">_</span>`
-                            container.scrollTop = container.scrollHeight
-                        }
-                    }
-                } else {
-                    // Non-stream fallback
-                    fullText = response
-                    textElement.innerHTML = fullText.replace(/\n/g, '<br>')
-                }
-                
-                // Remove cursor
-                textElement.innerHTML = fullText.replace(/\n/g, '<br>')
-                return fullText
-                
+                models.forEach(m => {
+                    const btn = document.createElement('div');
+                    const isActive = m.id.includes(currentModel);
+                    btn.className = `p-3 rounded-xl cursor-pointer transition-all border ${isActive ? 'bg-cyan-500/10 border-cyan-500/50 text-white' : 'border-transparent text-gray-400 hover:bg-[#1a1a2e]'}`;
+                    btn.innerHTML = `
+                        <div class="text-xs font-bold">${m.name || m.id}</div>
+                        <div class="text-[10px] opacity-50 font-mono">${m.provider}</div>
+                    `;
+                    btn.onclick = () => {
+                        currentModel = m.id;
+                        document.getElementById('current-model-tag').innerText = m.id;
+                        initModels(); // Refresh UI
+                    };
+                    listContainer.appendChild(btn);
+                    if (isActive) document.getElementById('current-model-tag').innerText = m.id;
+                });
             } catch (err) {
-                textElement.innerHTML = `❌ Error: ${err.message}`
-                return "Sorry, I ran into an error."
+                console.error("Model fetch failed", err);
+                document.getElementById('current-model-tag').innerText = "Using Default Engine";
             }
         }
 
-        // Send message
+        // 2. Chat Logic
         async function sendMessage() {
-            const input = document.getElementById('user-input')
-            const text = input.value.trim()
-            
-            if (!text) return
-            
-            // Add user message
-            addMessage(text, true)
-            messages.push({ role: "user", content: text })
-            
-            // Clear input
-            input.value = ''
-            
-            // Add AI thinking + stream
-            const aiResponse = await streamResponse(messages)
-            
-            // Save assistant reply to history
-            messages.push({ role: "assistant", content: aiResponse })
-            
-            // Persist to localStorage
-            localStorage.setItem(currentChatId, JSON.stringify(messages))
-        }
+            const input = document.getElementById('user-input');
+            const text = input.value.trim();
+            if (!text) return;
 
-        // New chat
-        function newChat() {
-            if (messages.length > 0 && !confirm("Start a fresh conversation?")) return
-            
-            currentChatId = 'chat-' + Date.now()
-            messages = []
-            
-            const container = document.getElementById('chat-window')
-            container.innerHTML = `
-                <div class="max-w-2xl mx-auto text-center mt-20">
-                    <div class="text-7xl mb-6">🧬</div>
-                    <h2 class="text-5xl font-semibold logo-font tracking-tighter">Hello, I'm Grok.</h2>
-                    <p class="text-2xl text-cyan-300 mt-4">Built by xAI • Running on Puter.js</p>
-                    <p class="mt-8 text-gray-400 max-w-md mx-auto">I have access to every major model in the world. Choose Grok 4.20 for my original personality, or switch to Claude, GPT-5, Gemini, or anything else instantly.</p>
-                    <div onclick="document.getElementById('user-input').focus()" class="inline-block mt-12 px-10 py-4 border border-dashed border-cyan-400/40 rounded-3xl text-cyan-400 hover:border-cyan-400 cursor-pointer">What shall we explore today?</div>
-                </div>
-            `
-        }
+            // Add User Message to UI & History
+            appendMessage(text, 'user');
+            messages.push({ role: 'user', content: text });
+            input.value = '';
 
-        function toggleStreaming() {
-            isStreaming = !isStreaming
-            const dot = document.getElementById('stream-dot')
-            dot.style.backgroundColor = isStreaming ? '#10b981' : '#f59e0b'
-            dot.classList.toggle('animate-pulse', isStreaming)
-        }
+            // Setup AI Response Bubble
+            const aiBubbleId = 'ai-' + Date.now();
+            const aiContainer = appendMessage('', 'ai', aiBubbleId);
+            const contentSpan = aiContainer.querySelector('.msg-content');
+            const cursor = aiContainer.querySelector('.streaming-cursor');
 
-        function exportChat() {
-            if (messages.length === 0) return alert("Nothing to export yet!")
-            const data = JSON.stringify(messages, null, 2)
-            const blob = new Blob([data], { type: 'application/json' })
-            const url = URL.createObjectURL(blob)
-            const a = document.createElement('a')
-            a.href = url
-            a.download = `grok-chat-${new Date().toISOString().slice(0,10)}.json`
-            a.click()
-        }
+            try {
+                // Construct payload with System Prompt if empty history
+                const payload = messages.length === 1 ? [{ role: 'system', content: SYSTEM_PROMPT }, ...messages] : messages;
 
-        function clearAllHistory() {
-            if (confirm("Delete ALL saved conversations permanently?")) {
-                localStorage.clear()
-                newChat()
+                const response = await puter.ai.chat(payload, {
+                    model: currentModel,
+                    stream: true
+                });
+
+                let fullText = '';
+                for await (const part of response) {
+                    if (part.text) {
+                        fullText += part.text;
+                        // Use innerHTML with line break replacement
+                        contentSpan.innerHTML = fullText.replace(/\n/g, '<br>');
+                        scrollToBottom();
+                    }
+                }
+                
+                messages.push({ role: 'assistant', content: fullText });
+                cursor.remove(); // Remove cursor when done
+            } catch (err) {
+                contentSpan.innerHTML = `<span class="text-red-400 italic">Error: ${err.message}</span>`;
+                cursor.remove();
             }
         }
 
-        // Initialize everything
-        window.onload = async () => {
-            initTailwind()
-            await loadModels()
+        // UI Helpers
+        function appendMessage(text, role, id = null) {
+            const container = document.getElementById('chat-window');
+            const wrapper = document.createElement('div');
+            wrapper.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-4 duration-300`;
             
-            // Welcome screen
-            newChat()
-            
-            // Keyboard support
-            const input = document.getElementById('user-input')
-            input.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault()
-                    sendMessage()
-                }
-            })
-            
-            console.log('%c🚀 Your personal Grok AI website is ready! Remember: I am Grok, built by xAI — helpful, truthful, and a bit rebellious.', 'color:#00f0ff; font-family:monospace')
+            if (role === 'user') {
+                wrapper.innerHTML = `<div class="max-w-[80%] bg-cyan-400 text-black px-6 py-3 rounded-2xl rounded-tr-none font-medium shadow-lg shadow-cyan-500/10">${text}</div>`;
+            } else {
+                wrapper.innerHTML = `
+                    <div class="flex gap-4 max-w-[85%]">
+                        <div class="w-8 h-8 bg-[#1f1f3a] rounded-lg flex items-center justify-center shrink-0 border border-[#33335a]">🧬</div>
+                        <div class="bg-[#1a1a2e] border border-[#33335a] px-6 py-4 rounded-2xl rounded-tl-none text-gray-100" id="${id}">
+                            <span class="msg-content">${text}</span>
+                            <span class="streaming-cursor inline-block w-1.5 h-4 bg-cyan-400 ml-1 align-middle"></span>
+                        </div>
+                    </div>`;
+            }
+            container.appendChild(wrapper);
+            scrollToBottom();
+            return wrapper;
         }
+
+        function scrollToBottom() {
+            const win = document.getElementById('chat-window');
+            win.scrollTo({ top: win.scrollHeight, behavior: 'smooth' });
+        }
+
+        function newChat() {
+            messages = [];
+            document.getElementById('chat-window').innerHTML = `
+                <div class="flex flex-col items-center justify-center h-full text-center opacity-40">
+                    <div class="text-6xl mb-4">✦</div>
+                    <h3 class="text-xl font-medium">Encrypted Session Started</h3>
+                    <p class="text-sm">Ready for your prompt, brother.</p>
+                </div>`;
+        }
+
+        function clearHistory() {
+            if(confirm("Wipe conversation data?")) {
+                newChat();
+            }
+        }
+
+        // Handle Auto-resize textarea
+        const input = document.getElementById('user-input');
+        input.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Start
+        window.onload = initModels;
+        newChat();
     </script>
 </body>
 </html>
