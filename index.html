@@ -1,29 +1,45 @@
+
 <!DOCTYPE html>
 <html>
 <head>
   <script src="https://js.puter.com/v2/"></script>
 </head>
 <body>
+  <h2>Nano Banana Test - Kolkata Cyber Banana</h2>
+  <div id="result"></div>
+
   <script>
     async function generateNanoBanana() {
-      const prompt = "A realistic Kolkata street vendor selling hot biryani with a futuristic nano banana floating above, 4K, cinematic lighting";
+      const prompt = "Realistic Kolkata street food vendor holding a glowing nano banana, cyberpunk style, 4K, detailed, vibrant colors, neon lights, Howrah Bridge background";
       
-      const response = await puter.ai.image({
-        model: "gemini-3.1-flash-image",   // or "gemini-3-pro-image" / "gemini-2.5-flash-image"
-        prompt: prompt,
-        width: 1024,
-        height: 1024,
-        // steps: 30, quality: "high"  // add more params if needed
-      });
+      try {
+        console.log("Starting Nano Banana generation...");
 
-      // Display the image
-      const img = document.createElement('img');
-      img.src = response.url;   // or response.data if base64
-      document.body.appendChild(img);
-      
-      console.log("✅ Nano Banana image generated:", response.url);
+        // Correct usage: await returns Image element directly
+        const imageElement = await puter.ai.txt2img(prompt, {
+          model: "gemini-3.1-flash-image-preview",   // most stable right now
+          // model: "gemini-2.5-flash-image",        // fallback if above fails
+          testMode: true,                            // ← important for testing
+          width: 1024,
+          height: 1024,
+          quality: "high"
+        });
+
+        // Append the returned Image element directly
+        document.getElementById("result").innerHTML = '';
+        document.getElementById("result").appendChild(imageElement);
+        
+        console.log("✅ Nano Banana success - Image appended");
+        alert("Image generated successfully!");
+
+      } catch (e) {
+        console.error("Puter Nano Banana error:", e);
+        document.getElementById("result").innerHTML = `<p style="color:red;">Error: ${e.message || e}</p>`;
+        alert("Error: " + (e.message || "Check console for details"));
+      }
     }
 
+    // Run automatically
     generateNanoBanana();
   </script>
 </body>
